@@ -12,7 +12,7 @@ curl -X GET "https://api.cloudflare.com/client/v4/user/tokens/verify" \
 ```shell 获取所有DNS记录
 curl -X GET "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records" \
   -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type:application/json" | jq
+  -H "Content-Type:application/json" | jq '.result[] | {id,name}'
 ```
 
 获取DNS Detail

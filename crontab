@@ -1,0 +1,2 @@
+# 每小时执行一次脚本
+*/1 * * * * cd /usr/src/app && /usr/local/bin/node --env-file=.env index.js >> /var/log/cron.log 2>&1

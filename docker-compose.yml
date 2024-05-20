@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  dns-sync:
+    build: .
+    container_name: cron-dns-sync-app
+    volumes:
+      - .:/usr/src/app
+    environment:
+      - NODE_ENV=production

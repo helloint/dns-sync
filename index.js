@@ -66,13 +66,12 @@ const main = async () => {
 
     const ip = await getIp();
     const realIp = ip.split('%')[0];
-    console.log(`realIp: ${realIp}`);
 
     const dns = await getDns();
     const dnsIp = dns?.result?.content;
-    console.log(`dnsIp: ${dnsIp}`);
 
     if (dnsIp !== ip) {
+        console.log(`realIp: ${realIp}, dnsIp: ${dnsIp}`);
         console.log(`dnsIp: ${dnsIp} doesn't match realIp: ${ip}, update it...`);
         const result = await setDns(ip);
         if (result.success) {

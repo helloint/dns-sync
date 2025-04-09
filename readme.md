@@ -1,4 +1,5 @@
 # Cloudflare DDNS
+更多介绍: https://zhuanlan.zhihu.com/p/699112858
 
 ## Setup
 1. 创建 Cloudflare TOKEN ([文档](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/))

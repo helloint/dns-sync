@@ -28,5 +28,5 @@ RUN crontab /etc/cron.d/mycron
 # 创建cron的运行日志文件
 RUN touch /var/log/cron.log
 
-# 启动容器时运行crond和Node.js应用程序
-CMD cron && tail -f /var/log/cron.log
+# 启动容器时先执行一次脚本，再启动cron守护进程
+CMD sh -c "cd /usr/src/app && node --env-file=.env index.js >> /var/log/cron.log 2>&1 && cron && tail -f /var/log/cron.log"

@@ -6,7 +6,7 @@ const ipV4Url = 'https://api.ip.sb/ip';
 
 const getDns = async () => {
     const url = `https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records/${DNS_ID}`;
-    return await fetchApi(url);
+    return await fetchWithRetry(() => fetchApi(url));
 };
 
 const setDns = async (ip) => {
@@ -14,10 +14,20 @@ const setDns = async (ip) => {
     return await fetchApi(url, {content: ip});
 };
 
-const getIp = async () => {
-    return await (await fetch(ipV4Url)).text();
+const fetchWithRetry = async (fn, retries = 3) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await fn();
+        } catch (error) {
+            if (i === retries - 1) throw error;
+            console.log(`fetch failed, retrying... (${i + 1}/${retries})`);
+        }
+    }
 }
 
+const getIp = async () => {
+    return fetchWithRetry(async () => (await fetch(ipV4Url)).text()).then(t => t.trim());
+}
 
 const fetchApi = async (url, payload) => {
     try {
@@ -64,10 +74,22 @@ const main = async () => {
         return;
     }
 
-    const ip = await getIp();
-    const realIp = ip.split('%')[0];
+    let ip, dns;
+    try {
+        ip = await getIp();
+    } catch (e) {
+        console.error(`failed to get ip, skip.`);
+        return;
+    }
 
-    const dns = await getDns();
+    try {
+        dns = await getDns();
+    } catch (e) {
+        console.error(`failed to get dns, skip.`);
+        return;
+    }
+
+    const realIp = ip.split('%')[0];
     const dnsIp = dns?.result?.content;
 
     if (dnsIp !== ip) {

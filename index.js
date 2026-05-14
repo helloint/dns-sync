@@ -2,7 +2,7 @@ const ZONE_ID = process.env.ZONE_ID;
 const DNS_ID = process.env.DNS_ID;
 const TOKEN = process.env.TOKEN;
 
-const ipV4Url = 'https://4.ipw.cn';
+const ipV4Url = 'https://api.ip.sb/ip';
 
 const getDns = async () => {
     const url = `https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records/${DNS_ID}`;

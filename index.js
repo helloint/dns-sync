@@ -1,16 +1,16 @@
 const ZONE_ID = process.env.ZONE_ID;
-const DNS_ID = process.env.DNS_ID;
+const DNS_IDS = process.env.DNS_IDS?.split(',').map(id => id.trim()).filter(Boolean) || [];
 const TOKEN = process.env.TOKEN;
 
 const ipV4Url = 'https://api.ip.sb/ip';
 
-const getDns = async () => {
-    const url = `https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records/${DNS_ID}`;
+const getDns = async (dnsId) => {
+    const url = `https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records/${dnsId}`;
     return await fetchWithRetry(() => fetchApi(url));
 };
 
-const setDns = async (ip) => {
-    const url = `https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records/${DNS_ID}`;
+const setDns = async (dnsId, ip) => {
+    const url = `https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records/${dnsId}`;
     return await fetchApi(url, {content: ip});
 };
 
@@ -69,12 +69,12 @@ const generateHeader = () => {
 }
 
 const main = async () => {
-    if (!ZONE_ID || !DNS_ID || !TOKEN) {
+    if (!ZONE_ID || DNS_IDS.length === 0 || !TOKEN) {
         console.error(`.env value is missing, quit.`);
         return;
     }
 
-    let ip, dns;
+    let ip;
     try {
         ip = await getIp();
     } catch (e) {
@@ -82,27 +82,31 @@ const main = async () => {
         return;
     }
 
-    try {
-        dns = await getDns();
-    } catch (e) {
-        console.error(`failed to get dns, skip.`);
-        return;
-    }
-
     const realIp = ip.split('%')[0];
-    const dnsIp = dns?.result?.content;
 
-    if (dnsIp !== ip) {
-        console.log(`realIp: ${realIp}, dnsIp: ${dnsIp}`);
-        console.log(`dnsIp: ${dnsIp} doesn't match realIp: ${ip}, update it...`);
-        const result = await setDns(ip);
-        if (result.success) {
-            console.log(`update success`);
-        } else {
-            console.log(`${result}`);
+    for (const dnsId of DNS_IDS) {
+        let dns;
+        try {
+            dns = await getDns(dnsId);
+        } catch (e) {
+            console.error(`failed to get dns ${dnsId}, skip.`);
+            continue;
         }
-    } else {
-        console.log(`ip match, exit.`);
+
+        const dnsIp = dns?.result?.content;
+
+        if (dnsIp !== ip) {
+            console.log(`[${dnsId}] realIp: ${realIp}, dnsIp: ${dnsIp}`);
+            console.log(`[${dnsId}] dnsIp: ${dnsIp} doesn't match realIp: ${ip}, update it...`);
+            const result = await setDns(dnsId, ip);
+            if (result.success) {
+                console.log(`[${dnsId}] update success`);
+            } else {
+                console.log(`[${dnsId}] ${result}`);
+            }
+        } else {
+            console.log(`[${dnsId}] ip match, skip.`);
+        }
     }
 };
 
